@@ -14,7 +14,7 @@
   ],
   "discountTenths": 12,
   "referrals": {
-    "unlockAt": 3,
+    "unlockAtClimb": 3,
     "code": "SUMMIT-D3",
     "pointsPerReferral": 200,
     "members": [

@@ -5,6 +5,7 @@ export function getExpedition() {
 }
 
 export const demoReferralPoints = sample.referrals.members.length * sample.referrals.pointsPerReferral;
+export const referralClimbIndex = sample.referrals.unlockAtClimb - 1;
 
 export const mascots = [
   { id: "pika", name: "Alpine Pika" },

@@ -1,10 +1,10 @@
 import { useRef, useState } from "react";
-import { demoReferralPoints, getExpedition } from "@/lib/data";
+import { demoReferralPoints, getExpedition, referralClimbIndex } from "@/lib/data";
 import { Badge, Icon, Meter } from "./summit-ui";
 
 const { mountains, referrals } = getExpedition();
-const { unlockAt, code, members, pointsPerReferral } = referrals;
-const summit = mountains[unlockAt - 1];
+const { unlockAtClimb, code, members, pointsPerReferral } = referrals;
+const summit = mountains[referralClimbIndex];
 const pointsFormat = new Intl.NumberFormat("en-US");
 
 function ReferralCode() {
@@ -40,17 +40,17 @@ function DenaliProgress({ level, onSummit, onUnlock }: { level: number; onSummit
   return (
     <section className="panel referral-panel" aria-labelledby="referral-path-title">
       <div className="panel-heading">
-        <div><h2 id="referral-path-title">Your path to {summit.name}</h2><p>{level} of {unlockAt} summits reached</p></div>
+        <div><h2 id="referral-path-title">Your path to {summit.name}</h2><p>{level} of {referralClimbIndex} prior summits reached</p></div>
         <button className="demo-nudge referral-demo-unlock" type="button" onClick={onUnlock}>
           <Icon name="unlock" size={15} /> Unlock referrals (demo)
         </button>
       </div>
       <ol className="referral-milestones">
-        {mountains.slice(0, unlockAt).map((mountain, index) => (
-          <li key={mountain.name} data-reached={index < level} data-target={index === unlockAt - 1}>
+        {mountains.slice(0, unlockAtClimb).map((mountain, index) => (
+          <li key={mountain.name} data-reached={index < level} data-target={index === referralClimbIndex}>
             <Badge level={index + 1} size={46} />
             <b>{mountain.name}</b>
-            <span>{index < level ? "Reached" : index === unlockAt - 1 ? "Unlocks referrals" : "Ahead"}</span>
+            <span>{index < level ? "Reached" : index === referralClimbIndex ? "Unlocks referrals" : "Ahead"}</span>
           </li>
         ))}
       </ol>
@@ -98,10 +98,10 @@ export function Referrals({ level, unlocked, onSummit, onUnlock }: {
           <div className="referral-hero-intro">
             <div>
               <h2 id="referral-hero-title">{unlocked ? "Your referral code" : `Unlocks at ${summit.name}`}</h2>
-              <p>{unlocked ? "Share your code with a friend." : "Reach the third summit to get your referral code."}</p>
+              <p>{unlocked ? "Share your code with a friend." : `Start the ${summit.name} climb to get your referral code.`}</p>
             </div>
             <div className="referral-crest" aria-hidden="true">
-              <Badge level={unlockAt} size={92} shine={unlocked} />
+              <Badge level={unlockAtClimb} size={92} shine={unlocked} />
               {!unlocked && <span className="referral-lock"><Icon name="lock" size={15} /></span>}
             </div>
           </div>

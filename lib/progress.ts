@@ -1,4 +1,4 @@
-import { defaultMascot, demoReferralPoints, getExpedition, type MascotId } from "./data";
+import { defaultMascot, demoReferralPoints, getExpedition, referralClimbIndex, type MascotId } from "./data";
 
 const rules = getExpedition();
 const storeKey = "summit:expedition:v1";
@@ -136,7 +136,7 @@ export function getSnapshot() {
 }
 
 export function referralsUnlocked(state: Expedition) {
-  return state.demoReferralsUnlocked === true || state.summitsReached >= rules.referrals.unlockAt;
+  return state.demoReferralsUnlocked === true || state.summitsReached >= referralClimbIndex;
 }
 
 function creditDemoReferrals(state: Expedition): Expedition {
@@ -252,12 +252,7 @@ export function nextDemoDay() {
 }
 
 export function unlockDemoReferrals() {
-  update((state) => {
-    if (referralsUnlocked(state)) return state;
-    const denaliIndex = rules.referrals.unlockAt - 1;
-    const next = state.summitsReached < denaliIndex ? startClimb(state, denaliIndex) : state;
-    return { ...next, demoReferralsUnlocked: true };
-  });
+  update((state) => referralsUnlocked(state) ? state : startClimb(state, referralClimbIndex));
 }
 
 export function chooseMascot(mascot: MascotId) {

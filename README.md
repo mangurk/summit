@@ -14,7 +14,7 @@ Earned stamps carry over across missed weeks to avoid discouraging users. Losing
 
 Logging entries on all 7 days earns a weekly bonus that can be spent on a day pass or a 20% discount for one month. A pass covers one missed day toward the weekly goal.
 
-Referrals unlock at **Denali**, the third summit, targeting the 3-cycle break-even point. Each successful referral earns 200 demo points (a lot), which can be spent on store rewards.
+Referrals unlock when you start **Denali**, the third climb and the demo’s proxy for the 3-cycle break-even point. Each successful referral earns 200 demo points (a lot), which can be spent on store rewards.
 
 ## Demo walkthrough
 
@@ -25,7 +25,7 @@ All you need to do is:
 1. Complete the 3 entries for Saturday (notes are optional).
 2. Tap the **Next** arrow beside **3/3** in the top-right corner of the Daily check-in card.
 3. Add 3 entries for Sunday.
-4. You're done.
+4. Claim Aconcagua’s crest to start Denali and unlock referrals.
 
 If you want to mess around a bit longer, you can unlock referrals directly from the referrals page for a preview. Everything else is pretty much just for show.
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
-import { defaultMascot, getExpedition, mascots, type MascotId } from "@/lib/data";
+import { defaultMascot, getExpedition, mascots, referralClimbIndex, type MascotId } from "@/lib/data";
 import {
   canPlacePass, chooseMascot, claimSummit, dateFrom, discountFor, getInitialSnapshot, getSnapshot,
   isComplete, logCount, mondayOf, nextDemoDay, placePass, readExpedition, redeem,
@@ -467,7 +467,7 @@ export default function Page() {
           : <Today state={state} stamps={stamps} burstField={burstField} monthOpen={monthOpen} weekOffset={weekOffset} onToggleMonth={() => setMonthOpen((open) => !open)} onOffset={setWeekOffset} onMap={() => map()} onNextDay={previewNextDay} onExplainStamps={() => setSheet({ type: "stamp-guide" })} onLog={(field) => setSheet({ type: "log", field })} onDay={(date) => setSheet({ type: "day", date })} onWeek={showWeek} />)}
         {tab === "map" && <ExpeditionMap state={state} stamps={stamps} selected={selection ?? current} from={travelFrom} onSelect={setSelection} onArrive={finishTravel} />}
         {tab === "rewards" && <RewardsStore state={state} onRedeem={buy} onPass={() => setSheet({ type: "pass" })} />}
-        {tab === "referrals" && <Referrals level={level} unlocked={referralsUnlocked(state)} onSummit={() => map(rules.referrals.unlockAt - 1)} onUnlock={demoUnlockReferrals} />}
+        {tab === "referrals" && <Referrals level={level} unlocked={referralsUnlocked(state)} onSummit={() => map(referralClimbIndex)} onUnlock={demoUnlockReferrals} />}
         {tab === "profile" && <Profile state={state} onMascot={chooseMascot} onSummit={map} onDay={previewNextDay} onReset={() => setSheet({ type: "reset" })} onInstall={() => setSheet({ type: "install" })} />}
       </main>
 
@@ -531,7 +531,7 @@ export default function Page() {
               <div className="reward-tags">
                 <span><Icon name="ticket" size={16} /> +{discountFor(1)}% recurring</span>
                 {bonusVisible && <span><Icon name="coin" size={16} /> +{rules.weeklyPoints} pts earned</span>}
-                {current === rules.referrals.unlockAt - 1 && <span><Icon name="referrals" size={16} /> Unlocks Referrals</span>}
+                {current + 1 === referralClimbIndex && <span><Icon name="referrals" size={16} /> Unlocks Referrals</span>}
               </div>
             )}
           </div>
