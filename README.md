@@ -39,7 +39,7 @@ npm run demo
 
 This installs dependencies with regular progress messages, then starts Summit. The standard `npm install && npm run dev` command also works.
 
-Open `http://localhost:3000` on the computer. On an iPhone connected to the same Wi-Fi, open the **Network** URL printed in the terminal.
+Open the **Local** URL printed in the terminal. On an iPhone connected to the same Wi-Fi, use the **Network** URL. The addresses appear in blue in terminals with color enabled.
 
 To serve a production build after installing dependencies, run `npm run build && npm start`.
 

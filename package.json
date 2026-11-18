@@ -7,9 +7,9 @@
   },
   "scripts": {
     "demo": "node scripts/demo.mjs",
-    "dev": "next dev",
+    "dev": "node scripts/serve.mjs dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/serve.mjs start",
     "lint": "eslint"
   },
   "dependencies": {
