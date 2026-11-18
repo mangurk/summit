@@ -539,7 +539,7 @@ export default function Page() {
       )}
 
       {sheet?.type === "log" && (
-        <Dialog key={sheet.field} title={`Log ${objectives.find((objective) => objective.id === sheet.field)?.title.toLowerCase()}`} onClose={close} variant="centered">
+        <Dialog key={sheet.field} title={`Log ${objectives.find((objective) => objective.id === sheet.field)?.title.toLowerCase()}`} onClose={close}>
           <LogForm field={sheet.field} log={state.logs[state.today] ?? {}} onSave={(patch) => saveLog(state.today, sheet.field, patch)} />
         </Dialog>
       )}
@@ -607,12 +607,12 @@ export default function Page() {
       )}
 
       {sheet?.type === "install" && (
-        <Dialog title="Add to Home Screen" onClose={close} variant="centered">
+        <Dialog title="Add to Home Screen" onClose={close}>
           <p className="sheet-note">Open your browser’s share menu or app menu and choose Add to Home Screen or Install, if offered.</p>
         </Dialog>
       )}
       {sheet?.type === "reset" && (
-        <Dialog title="Reset demo progress?" onClose={close} variant="centered">
+        <Dialog title="Reset demo progress?" onClose={close}>
           <p className="sheet-note">This clears your local logs, points, and rewards and restores the example expedition.</p>
           <button className="button button-primary" type="button" onClick={() => { resetDemo(); close(); setSelection(null); setTravelFrom(null); setWeekOffset(0); navigate("today"); }}>Reset to example</button>
         </Dialog>

@@ -57,7 +57,7 @@ export function Dialog({
   title: string;
   onClose: () => void;
   children: ReactNode;
-  variant?: "reward" | "centered";
+  variant?: "reward";
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 

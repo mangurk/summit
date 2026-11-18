@@ -753,8 +753,8 @@ button.summit-stamps:hover { border-color: #e9bc91; background: #35234c; }
 .daily-toast button { display: grid; place-items: center; min-width: 32px; min-height: 32px; }
 @keyframes daily-toast-in { from { transform: translate(-50%,10px); opacity: 0; } to { transform: translate(-50%,0); opacity: 1; } }
 .sheet {
-  position: fixed; inset: auto 0 0; width: min(100%,460px); max-width: none; max-height: min(91dvh,780px); margin: auto auto 0;
-  overflow: auto; border: 1px solid #e8dbf1; border-radius: 22px 22px 0 0; color: var(--ink); background: #fff;
+  position: fixed; inset: 0; width: min(100%,460px); max-width: none; max-height: min(91dvh,780px); margin: auto;
+  overflow: auto; border: 1px solid #e8dbf1; border-radius: 22px; color: var(--ink); background: #fff;
   box-shadow: 0 15px 50px #16092265; animation: sheet-in .22s ease-out both;
 }
 .sheet::backdrop { background: #170e27ab; backdrop-filter: blur(3px); }
@@ -849,12 +849,10 @@ body:has(.sheet[open]) { overflow: hidden; }
   .sheet::backdrop { background-color: #2e164eab; }
   /* Leave a backdrop gutter so Safari samples it instead of the sheet's buttons. */
   .sheet {
-    bottom: calc(12px + env(safe-area-inset-bottom)); width: min(calc(100% - 24px), 460px);
+    width: min(calc(100% - 24px), 460px);
     max-height: min(calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px), 780px);
-    border-radius: 22px; overscroll-behavior-y: none;
+    overscroll-behavior-y: none;
   }
-  /* Keep these dialogs clear of Safari’s bottom toolbar. */
-  .centered-sheet { inset: 0; margin: auto; }
   .sheet-inner { padding-bottom: 18px; }
   .app-bar { height: 58px; }
   .shell { padding-top: 15px; }
@@ -950,7 +948,6 @@ body:has(.sheet[open]) { overflow: hidden; }
   }
   .profile-hero { align-content: center; padding: 22px; }
   .badge-tile { font-size: 11px; }
-  .sheet { inset: 0; margin: auto; border-radius: 22px; }
   .sheet-inner { padding: 18px; }
   .toast { bottom: 21px; }
 }
