@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { demoReferralPoints, getExpedition, referralClimbIndex } from "@/lib/data";
+import { Dialog } from "./check-in";
 import { Badge, Icon, Meter } from "./summit-ui";
 
 const { mountains, referrals } = getExpedition();
@@ -7,32 +8,71 @@ const { unlockAtClimb, code, members, pointsPerReferral } = referrals;
 const summit = mountains[referralClimbIndex];
 const pointsFormat = new Intl.NumberFormat("en-US");
 
+function copyWithSelection(text: string) {
+  const previousFocus = document.activeElement;
+  const field = document.createElement("textarea");
+  field.value = text;
+  field.readOnly = true;
+  field.setAttribute("aria-hidden", "true");
+  field.style.cssText = "position:fixed;inset:0 auto auto 0;opacity:0;pointer-events:none;font-size:16px";
+  document.body.append(field);
+
+  try {
+    field.focus({ preventScroll: true });
+    field.select();
+    return document.execCommand("copy");
+  } catch {
+    return false;
+  } finally {
+    field.remove();
+    if (previousFocus instanceof HTMLElement) previousFocus.focus({ preventScroll: true });
+  }
+}
+
 function ReferralCode() {
-  const field = useRef<HTMLInputElement>(null);
   const [copyStatus, setCopyStatus] = useState("");
+  const copied = copyStatus === "Copied!";
 
   async function copyCode() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopyStatus("Copied");
-    } catch {
-      field.current?.focus();
-      field.current?.select();
-      setCopyStatus("Code selected. Copy it to share.");
+    if (navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(code);
+        setCopyStatus("Copied!");
+        return;
+      } catch {
+        // Try selection-based copying if the browser denied clipboard access.
+      }
     }
+    setCopyStatus(copyWithSelection(code) ? "Copied!" : "Couldn’t copy automatically. Select the code to copy it.");
   }
 
   return (
     <div className="referral-code">
       <div className="referral-code-row">
-        <input ref={field} type="text" readOnly value={code} aria-label="Your referral code" />
+        <input type="text" readOnly value={code} aria-label="Your referral code" />
         <button className="button referral-copy-button" type="button" onClick={copyCode}>
-          <Icon name={copyStatus === "Copied" ? "check" : "copy"} size={16} />
-          {copyStatus === "Copied" ? "Copied" : "Copy code"}
+          <Icon name={copied ? "check" : "copy"} size={16} />
+          {copied ? "Copied!" : "Copy code"}
         </button>
       </div>
-      <span className={copyStatus === "Copied" ? "sr-only" : "referral-copy-status"} role="status">{copyStatus}</span>
+      <span className={copied ? "sr-only" : "referral-copy-status"} role="status">{copyStatus}</span>
     </div>
+  );
+}
+
+export function ReferralWelcome({ onClose }: { onClose: () => void }) {
+  return (
+    <Dialog title="Referrals unlocked!" onClose={onClose} variant="reward">
+      <div className="achievement-reveal" aria-hidden="true">
+        <div className="reward-emblem"><Icon name="referrals" size={62} /></div>
+      </div>
+      <div className="reward-copy">
+        <h3>Bring a friend along</h3>
+        <p>You’ve made it to {summit.name}. Share your referral code and follow your friends’ progress from this tab.</p>
+        <div className="reward-tags"><span><Icon name="coin" size={16} /> +{pointsPerReferral} demo points per friend who joins</span></div>
+      </div>
+      <button className="button button-primary" type="button" onClick={onClose}>See my referral code <Icon name="east" size={18} /></button>
+    </Dialog>
   );
 }
 

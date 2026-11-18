@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExter
 import type { CSSProperties } from "react";
 import { defaultMascot, getExpedition, mascots, referralClimbIndex, type MascotId } from "@/lib/data";
 import {
-  canPlacePass, chooseMascot, claimSummit, dateFrom, discountFor, getInitialSnapshot, getSnapshot,
+  canPlacePass, chooseMascot, claimSummit, dateFrom, discountFor, dismissReferralWelcome, getInitialSnapshot, getSnapshot,
   isComplete, logCount, mondayOf, nextDemoDay, placePass, readExpedition, redeem,
   referralsUnlocked, resetDemo, saveCheckIn, subscribe, summitStamps, unlockDemoReferrals, weekClosed, weekCount,
   type DayLog, type Expedition,
@@ -14,7 +14,7 @@ import { Badge, Icon, Mascot, StampSlots } from "./summit-ui";
 import { MapBoard, PeakIcon } from "./trail-map";
 import { RestDayPicker } from "./rest-day-picker";
 import { MonthlyBreakdown, StampGuide, WeekBreakdown, WeekPanel } from "./progress-view";
-import { Referrals } from "./referrals";
+import { Referrals, ReferralWelcome } from "./referrals";
 
 const rules = getExpedition();
 const { mountains, items, summitStampTarget } = rules;
@@ -42,7 +42,7 @@ function positionNavPill(pill: HTMLSpanElement, button: HTMLButtonElement) {
   pill.style.transform = `translate(${button.offsetLeft}px, ${button.offsetTop}px)`;
 }
 
-function NavButtons({ active, onChange }: { active: Tab; onChange: (tab: Tab) => void }) {
+function NavButtons({ active, referralUnread, onChange }: { active: Tab; referralUnread: boolean; onChange: (tab: Tab) => void }) {
   const navRef = useRef<HTMLElement>(null);
   const selectedRef = useRef<HTMLSpanElement>(null);
   const hoverRef = useRef<HTMLSpanElement>(null);
@@ -90,12 +90,16 @@ function NavButtons({ active, onChange }: { active: Tab; onChange: (tab: Tab) =>
     <nav className="app-nav" aria-label="Expedition" ref={navRef} onPointerLeave={clearHover} onPointerCancel={clearHover}>
       <span className="nav-pill nav-pill-hover" ref={hoverRef} aria-hidden="true" />
       <span className="nav-pill nav-pill-selected" ref={selectedRef} aria-hidden="true" />
-      {navigation.map(([key, label]) => (
-        <button type="button" key={key} aria-current={key === active ? "page" : undefined} onClick={() => onChange(key)}
-          onPointerEnter={(event) => { if (event.pointerType !== "touch") showHover(event.currentTarget); }}>
-          <span><Icon name={key} size={21} /></span>{label}
-        </button>
-      ))}
+      {navigation.map(([key, label]) => {
+        const unread = key === "referrals" && referralUnread;
+        return (
+          <button type="button" key={key} aria-current={key === active ? "page" : undefined}
+            aria-label={unread ? "Referrals, new unlock" : undefined} onClick={() => onChange(key)}
+            onPointerEnter={(event) => { if (event.pointerType !== "touch") showHover(event.currentTarget); }}>
+            <span><Icon name={key} size={21} />{unread && <span className="nav-unread-dot" aria-hidden="true" />}</span>{label}
+          </button>
+        );
+      })}
     </nav>
   );
 }
@@ -406,6 +410,7 @@ export default function Page() {
     const earned = claimSummit(mountain);
     close();
     if (earned === null) return;
+    setWeekOffset(0);
     const next = mountains[earned + 1];
     setSelection(next ? earned + 1 : earned);
     if (next && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) setTravelFrom(earned);
@@ -453,7 +458,7 @@ export default function Page() {
       <header className="app-header">
         <div className="app-bar">
           <button className="brand" type="button" onClick={() => navigate("today")} aria-label="Summit home"><span className="brand-tile" aria-hidden="true"><span className="brand-mark" /></span>SUMMIT</button>
-          <NavButtons active={tab} onChange={navigate} />
+          <NavButtons active={tab} referralUnread={Boolean(state.referralWelcomePending)} onChange={navigate} />
           <div className="header-actions">
             <button className="points-pill" type="button" onClick={() => navigate("rewards")} aria-label={`Rewards, ${state.points} points`}><Icon name="coin" size={17} /> <b>{state.points}</b><span>pts</span></button>
             <button className="crest-button" type="button" style={{ "--crest-shadow": mountains[level - 1].crestShadow } as CSSProperties} onClick={() => navigate("profile")} aria-label={`Profile, level ${level}`}><Badge level={level} size={42} shine /></button>
@@ -503,6 +508,8 @@ export default function Page() {
 
       {sheet?.type === "stamp-guide" && <StampGuide count={stamps} onClose={close} />}
 
+      {tab === "referrals" && state.referralWelcomePending && <ReferralWelcome onClose={dismissReferralWelcome} />}
+
       {sheet?.type === "stamps" && (
         <Dialog title="Summit stamps earned" onClose={() => finishSummit(sheet.mountain)} variant="reward">
           <div className="stamp-sheet-visual"><StampSlots count={stamps} target={summitStampTarget} /></div>
@@ -522,7 +529,7 @@ export default function Page() {
         <Dialog key={showSummitReveal ? "summit" : "bonus"} title={showSummitReveal ? "Summit reached!" : "Perfect week!"} onClose={showSummitReveal ? () => finishSummit(current) : close} variant="reward">
           <div className="achievement-reveal">
             <div className="reward-rays" aria-hidden="true">{Array.from({ length: 10 }, (_, index) => <i key={index} style={{ "--spark-angle": `${index * 36}deg`, "--spark-delay": `${(index % 3) * 75}ms` } as CSSProperties} />)}</div>
-            {showSummitReveal ? <Badge level={current + 1} size={158} shine /> : <div className="coin-reveal"><Icon name="coin" size={74} /></div>}
+            {showSummitReveal ? <Badge level={current + 1} size={158} shine /> : <div className="reward-emblem"><Icon name="coin" size={74} /></div>}
           </div>
           <div className="reward-copy">
             <h3>{showSummitReveal ? mountains[current].badge : `+${rules.weeklyPoints} points`}</h3>

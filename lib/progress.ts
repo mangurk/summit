@@ -19,6 +19,7 @@ export type Expedition = {
   points: number;
   demoReferralsUnlocked?: true;
   referralPointsAwarded?: true;
+  referralWelcomePending?: true;
   passes: number;
   vouchers: number;
 };
@@ -150,7 +151,8 @@ export function readExpedition(snapshot: string) {
     const { clearedMonths, ...state } = saved;
     return creditDemoReferrals({ ...state, summitsReached: clearedMonths.length, climbStartWeek: mondayOf(state.today) });
   }
-  return creditDemoReferrals(saved);
+  const { today, climbStartWeek } = saved;
+  return creditDemoReferrals(today < climbStartWeek ? { ...saved, today: climbStartWeek } : saved);
 }
 
 export function subscribe(callback: () => void) {
@@ -209,7 +211,10 @@ export function claimSummit(expectedLevel: number) {
   update((state) => {
     if (state.summitsReached !== expectedLevel || summitStamps(state) < rules.summitStampTarget) return state;
     earned = expectedLevel;
-    return startClimb(state, expectedLevel + 1);
+    const next = startClimb(state, expectedLevel + 1);
+    if (next.climbStartWeek > next.today) next.today = next.climbStartWeek;
+    if (!referralsUnlocked(state) && referralsUnlocked(next)) next.referralWelcomePending = true;
+    return next;
   });
   return earned;
 }
@@ -253,6 +258,10 @@ export function nextDemoDay() {
 
 export function unlockDemoReferrals() {
   update((state) => referralsUnlocked(state) ? state : startClimb(state, referralClimbIndex));
+}
+
+export function dismissReferralWelcome() {
+  update((state) => ({ ...state, referralWelcomePending: undefined }));
 }
 
 export function chooseMascot(mascot: MascotId) {

@@ -25,7 +25,7 @@ All you need to do is:
 1. Complete the 3 entries for Saturday (notes are optional).
 2. Tap the **Next** arrow beside **3/3** in the top-right corner of the Daily check-in card.
 3. Add 3 entries for Sunday.
-4. Claim Aconcagua’s crest to start Denali and unlock referrals.
+4. Claim Aconcagua’s crest to start a fresh week on Denali. Open **Referrals** when its notification dot appears.
 
 If you want to mess around a bit longer, you can unlock referrals directly from the referrals page for a preview. Everything else is pretty much just for show.
 
