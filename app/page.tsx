@@ -1,19 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
 import { defaultMascot, getExpedition, mascots, type MascotId } from "@/lib/data";
 import {
   canPlacePass, chooseMascot, claimSummit, dateFrom, discountFor, getInitialSnapshot, getSnapshot,
-  isComplete, logCount, mondayOf, nextDemoDay, placePass, previewFinalStampWeek,
-  readExpedition, redeem, resetDemo, saveCheckIn, subscribe, summitStamps, weekClosed, weekCount,
+  isComplete, logCount, mondayOf, nextDemoDay, placePass, readExpedition, redeem,
+  referralsUnlocked, resetDemo, saveCheckIn, subscribe, summitStamps, unlockDemoReferrals, weekClosed, weekCount,
   type DayLog, type Expedition,
 } from "@/lib/progress";
-import { DayEntries, Dialog, LogForm, objectiveSummary, objectives, type Objective } from "./check-in";
+import { DayEntries, Dialog, LogForm, ObjectiveBadge, objectiveSummary, objectives, type Objective } from "./check-in";
 import { Badge, Icon, Mascot, StampSlots } from "./summit-ui";
 import { MapBoard, PeakIcon } from "./trail-map";
 import { RestDayPicker } from "./rest-day-picker";
-import { MonthlyBreakdown, WeekBreakdown, WeekPanel } from "./progress-view";
+import { MonthlyBreakdown, StampGuide, WeekBreakdown, WeekPanel } from "./progress-view";
 import { Referrals } from "./referrals";
 
 const rules = getExpedition();
@@ -27,6 +27,7 @@ type Sheet =
   | { type: "log"; field: Objective }
   | { type: "day"; date: string }
   | { type: "bonus" }
+  | { type: "stamp-guide" }
   | { type: "stamps"; mountain: number }
   | { type: "pass" }
   | { type: "install" }
@@ -35,11 +36,63 @@ type Sheet =
 const fullDate = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric" });
 const shortDate = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
 
+function positionNavPill(pill: HTMLSpanElement, button: HTMLButtonElement) {
+  pill.style.width = `${button.offsetWidth}px`;
+  pill.style.height = `${button.offsetHeight}px`;
+  pill.style.transform = `translate(${button.offsetLeft}px, ${button.offsetTop}px)`;
+}
+
 function NavButtons({ active, onChange }: { active: Tab; onChange: (tab: Tab) => void }) {
+  const navRef = useRef<HTMLElement>(null);
+  const selectedRef = useRef<HTMLSpanElement>(null);
+  const hoverRef = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    const selected = selectedRef.current;
+    const hover = hoverRef.current;
+    if (!nav || !selected || !hover) return;
+
+    const buttons = nav.querySelectorAll<HTMLButtonElement>("button");
+    const activeButton = buttons[navigation.findIndex(([key]) => key === active)];
+    const syncPills = () => {
+      positionNavPill(selected, activeButton);
+      const hoveredButton = nav.querySelector<HTMLButtonElement>("button:hover");
+      if (hoveredButton && hover.hasAttribute("data-visible")) positionNavPill(hover, hoveredButton);
+    };
+
+    syncPills();
+    if (!nav.hasAttribute("data-pills-ready")) {
+      selected.getBoundingClientRect();
+      nav.setAttribute("data-pills-ready", "");
+    }
+    const observer = new ResizeObserver(syncPills);
+    observer.observe(nav);
+    for (const button of buttons) observer.observe(button);
+    return () => observer.disconnect();
+  }, [active]);
+
+  function showHover(button: HTMLButtonElement) {
+    const hover = hoverRef.current;
+    if (!hover) return;
+    positionNavPill(hover, button);
+    if (!hover.hasAttribute("data-visible")) {
+      hover.getBoundingClientRect();
+      hover.setAttribute("data-visible", "");
+    }
+  }
+
+  function clearHover() {
+    hoverRef.current?.removeAttribute("data-visible");
+  }
+
   return (
-    <nav className="app-nav" aria-label="Expedition">
+    <nav className="app-nav" aria-label="Expedition" ref={navRef} onPointerLeave={clearHover} onPointerCancel={clearHover}>
+      <span className="nav-pill nav-pill-hover" ref={hoverRef} aria-hidden="true" />
+      <span className="nav-pill nav-pill-selected" ref={selectedRef} aria-hidden="true" />
       {navigation.map(([key, label]) => (
-        <button type="button" key={key} aria-current={key === active ? "page" : undefined} onClick={() => onChange(key)}>
+        <button type="button" key={key} aria-current={key === active ? "page" : undefined} onClick={() => onChange(key)}
+          onPointerEnter={(event) => { if (event.pointerType !== "touch") showHover(event.currentTarget); }}>
           <span><Icon name={key} size={21} /></span>{label}
         </button>
       ))}
@@ -48,10 +101,11 @@ function NavButtons({ active, onChange }: { active: Tab; onChange: (tab: Tab) =>
 }
 
 function Today({
-  state, stamps, monthOpen, weekOffset, onToggleMonth, onOffset, onMap, onNextDay, onLog, onDay, onWeek,
+  state, stamps, burstField, monthOpen, weekOffset, onToggleMonth, onOffset, onMap, onNextDay, onExplainStamps, onLog, onDay, onWeek,
 }: {
-  state: Expedition; stamps: number; monthOpen: boolean; weekOffset: number; onToggleMonth: () => void;
+  state: Expedition; stamps: number; burstField: Objective | null; monthOpen: boolean; weekOffset: number; onToggleMonth: () => void;
   onOffset: (offset: number) => void; onMap: () => void; onNextDay: () => void;
+  onExplainStamps: () => void;
   onLog: (field: Objective) => void; onDay: (day: string) => void; onWeek: (monday: string) => void;
 }) {
   const level = state.summitsReached;
@@ -83,7 +137,7 @@ function Today({
             <div className="hero-content">
               <div className="hero-top">
                 <span className="hero-kicker"><span className="brand-mark" aria-hidden="true" /> {seasonComplete ? "SEASON COMPLETE" : `SUMMIT ${String(mountIndex + 1).padStart(2, "0")} / 09`}</span>
-                {!seasonComplete && <StampSlots count={stamps} target={summitStampTarget} />}
+                {!seasonComplete && <StampSlots count={stamps} target={summitStampTarget} onExplain={onExplainStamps} />}
               </div>
               <h2 id="hero-title">{current.name}</h2>
               <p>{ready ? "Your summit is ready" : seasonComplete ? "All nine summits reached" : "One stamp per qualifying week"}</p>
@@ -101,7 +155,7 @@ function Today({
               <div><h2 id="check-in-title">Daily check-in</h2><p>{complete ? "Today’s check-in is complete" : "Log all three to earn a day on the trail."}</p></div>
               <div className="check-in-actions">
                 {complete && (
-                  <button className="check-in-next" type="button" onClick={onNextDay}
+                  <button className="demo-nudge check-in-next" type="button" onClick={onNextDay}
                     aria-label="Proceed to next day (demo)" title="Proceed to next day (demo)">
                     <Icon name="east" size={16} />
                   </button>
@@ -117,10 +171,10 @@ function Today({
                 const summary = objectiveSummary(objective.id, logged);
 
                 return (
-                  <button key={objective.id} className="objective" data-color={objective.color} data-logged={summary !== null} type="button" onClick={() => onLog(objective.id)} aria-label={`${summary ? "Edit" : "Log"} ${objective.title}`}>
+                  <button key={objective.id} className="objective" data-color={objective.color} type="button" onClick={() => onLog(objective.id)} aria-label={`${summary ? "Edit" : "Log"} ${objective.title}`}>
                     <span className="objective-icon"><Icon name={objective.glyph} size={22} /></span>
                     <span className="objective-copy"><b>{objective.title}</b><span>{summary ?? objective.detail}</span></span>
-                    <span className="objective-action">{summary ? <Icon name="check" size={16} /> : <>Log <Icon name="right" size={13} /></>}</span>
+                    <ObjectiveBadge filled={summary !== null} celebrate={summary !== null && burstField === objective.id} />
                   </button>
                 );
               })}
@@ -162,9 +216,8 @@ function ExpeditionMap({ state, stamps, selected, from, onSelect, onArrive }: {
           </section>
           <div className="map-legend" aria-label="Map legend"><span><i /> Reached</span><span><i /> Next</span><span><i /> Locked</span></div>
           <section className="panel season-note">
-            {finished && <Icon name="mountain" size={21} />}
             <div className="season-copy">
-              <h2>{finished ? "Mountain season complete" : "Mountain season"}</h2>
+              <h2><span className="brand-mark" aria-hidden="true" />{finished ? "Mountain season complete" : "Mountain season"}</h2>
               <p>{finished ? "Rainforests are planned for the next season." : `Four weekly stamps earn a summit. Finish all nine for ${discountFor(mountains.length)}% off in the demo.`}</p>
             </div>
             {!finished && <StampSlots count={stamps} target={summitStampTarget} />}
@@ -216,8 +269,8 @@ function RewardsStore({ state, onRedeem, onPass }: {
   );
 }
 
-function Profile({ state, onDay, onPreview, onReset, onInstall, onSummit, onMascot }: {
-  state: Expedition; onDay: () => void; onPreview?: () => void; onReset: () => void; onInstall: () => void; onSummit: (index: number) => void; onMascot: (id: MascotId) => void;
+function Profile({ state, onDay, onReset, onInstall, onSummit, onMascot }: {
+  state: Expedition; onDay: () => void; onReset: () => void; onInstall: () => void; onSummit: (index: number) => void; onMascot: (id: MascotId) => void;
 }) {
   const level = state.summitsReached;
   const rank = mountains[level - 1];
@@ -260,7 +313,6 @@ function Profile({ state, onDay, onPreview, onReset, onInstall, onSummit, onMasc
         <section className="panel demo-settings">
           <div className="panel-heading"><div><h2>Demo controls</h2><p>Advance the example calendar with your achievements intact.</p></div></div>
           <button className="settings-row" type="button" onClick={onDay}><Icon name="east" /><span>Preview next day</span><Icon name="right" size={17} /></button>
-          <button className="settings-row" type="button" onClick={onPreview} disabled={!onPreview}><Icon name="calendar" /><span>Preview final stamp week</span><Icon name="right" size={17} /></button>
           <button className="settings-row" type="button" onClick={onInstall}><Icon name="install" /><span>Add to Home Screen</span><Icon name="right" size={17} /></button>
           <button className="settings-row" type="button" onClick={onReset}><Icon name="reset" /><span>Reset demo progress</span><Icon name="right" size={17} /></button>
         </section>
@@ -279,6 +331,7 @@ export default function Page() {
   const [reportWeek, setReportWeek] = useState<string | null>(null);
   const reportOrigin = useRef<{ monday: string; scroll: number } | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [badgeBurst, setBadgeBurst] = useState<{ day: string; field: Objective } | null>(null);
   const [selection, setSelection] = useState<number | null>(null);
   const [travelFrom, setTravelFrom] = useState<number | null>(null);
   const finishTravel = useCallback(() => setTravelFrom(null), [setTravelFrom]);
@@ -287,7 +340,8 @@ export default function Page() {
   const stamps = summitStamps(state);
   const summitReady = stamps === summitStampTarget;
   const bonusVisible = sheet?.type === "bonus";
-  const showSummitReveal = tab === "today" && !reportWeek && (!sheet || bonusVisible) && summitReady;
+  const burstField = badgeBurst?.day === state.today ? badgeBurst.field : null;
+  const showSummitReveal = tab === "today" && !reportWeek && (!sheet || bonusVisible) && summitReady && !burstField;
 
   useEffect(() => {
     if (!toast?.title) return;
@@ -295,10 +349,17 @@ export default function Page() {
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
+  useEffect(() => {
+    if (!badgeBurst) return;
+    const timeout = window.setTimeout(() => setBadgeBurst(null), 620);
+    return () => window.clearTimeout(timeout);
+  }, [badgeBurst]);
+
   function navigate(next: Tab) {
     setTab(next);
     setReportWeek(null);
     setToast(null);
+    setBadgeBurst(null);
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 
@@ -329,6 +390,12 @@ export default function Page() {
     navigate("map");
   }
 
+  function demoUnlockReferrals() {
+    unlockDemoReferrals();
+    setSelection(null);
+    setTravelFrom(null);
+  }
+
   function showNewRoute() {
     if (!summitReady) return;
     map();
@@ -349,8 +416,16 @@ export default function Page() {
     setSheet(bonus ? { type: "bonus" } : null);
   }
 
-  function saveLog(day: string, patch: DayLog) {
+  function saveLog(day: string, field: Objective, patch: DayLog) {
+    const before = readExpedition(getSnapshot());
+    if (before.today !== day) {
+      close();
+      return;
+    }
     const { bonus, completed } = saveCheckIn(day, patch);
+    if (before.logs[day]?.[field] === undefined && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setBadgeBurst({ day, field });
+    }
     announceBonus(bonus);
     if (completed && !bonus) {
       const qualifying = weekCount(readExpedition(getSnapshot()), mondayOf(day));
@@ -389,14 +464,14 @@ export default function Page() {
       <main className="shell" id="main">
         {tab === "today" && (reportWeek
           ? <WeekBreakdown key={reportWeek} state={state} monday={reportWeek} onBack={returnToMonth} />
-          : <Today state={state} stamps={stamps} monthOpen={monthOpen} weekOffset={weekOffset} onToggleMonth={() => setMonthOpen((open) => !open)} onOffset={setWeekOffset} onMap={() => map()} onNextDay={previewNextDay} onLog={(field) => setSheet({ type: "log", field })} onDay={(date) => setSheet({ type: "day", date })} onWeek={showWeek} />)}
+          : <Today state={state} stamps={stamps} burstField={burstField} monthOpen={monthOpen} weekOffset={weekOffset} onToggleMonth={() => setMonthOpen((open) => !open)} onOffset={setWeekOffset} onMap={() => map()} onNextDay={previewNextDay} onExplainStamps={() => setSheet({ type: "stamp-guide" })} onLog={(field) => setSheet({ type: "log", field })} onDay={(date) => setSheet({ type: "day", date })} onWeek={showWeek} />)}
         {tab === "map" && <ExpeditionMap state={state} stamps={stamps} selected={selection ?? current} from={travelFrom} onSelect={setSelection} onArrive={finishTravel} />}
         {tab === "rewards" && <RewardsStore state={state} onRedeem={buy} onPass={() => setSheet({ type: "pass" })} />}
-        {tab === "referrals" && <Referrals level={level} onSummit={() => map(rules.referrals.unlockAt - 1)} />}
-        {tab === "profile" && <Profile state={state} onMascot={chooseMascot} onSummit={map} onDay={previewNextDay} onPreview={level === mountains.length ? undefined : () => { previewFinalStampWeek(); setWeekOffset(0); navigate("today"); }} onReset={() => setSheet({ type: "reset" })} onInstall={() => setSheet({ type: "install" })} />}
+        {tab === "referrals" && <Referrals level={level} unlocked={referralsUnlocked(state)} onSummit={() => map(rules.referrals.unlockAt - 1)} onUnlock={demoUnlockReferrals} />}
+        {tab === "profile" && <Profile state={state} onMascot={chooseMascot} onSummit={map} onDay={previewNextDay} onReset={() => setSheet({ type: "reset" })} onInstall={() => setSheet({ type: "install" })} />}
       </main>
 
-      {toast && !showSummitReveal && (
+      {toast && !showSummitReveal && !burstField && (
         <div className={`toast${toast.title ? " daily-toast" : ""}`} role="status">
           <span className="toast-mark"><Icon name="check" size={18} /></span>
           <div className="toast-message">{toast.title && <strong>{toast.title}</strong>}{toast.message}</div>
@@ -406,7 +481,7 @@ export default function Page() {
 
       {sheet?.type === "log" && (
         <Dialog key={sheet.field} title={`Log ${objectives.find((objective) => objective.id === sheet.field)?.title.toLowerCase()}`} onClose={close}>
-          <LogForm field={sheet.field} log={state.logs[state.today] ?? {}} onSave={(patch) => saveLog(state.today, patch)} />
+          <LogForm field={sheet.field} log={state.logs[state.today] ?? {}} onSave={(patch) => saveLog(state.today, sheet.field, patch)} />
         </Dialog>
       )}
 
@@ -426,9 +501,11 @@ export default function Page() {
         </Dialog>
       )}
 
+      {sheet?.type === "stamp-guide" && <StampGuide count={stamps} onClose={close} />}
+
       {sheet?.type === "stamps" && (
         <Dialog title="Summit stamps earned" onClose={() => finishSummit(sheet.mountain)} variant="reward">
-          <div className="redeem-stamps"><StampSlots count={stamps} target={summitStampTarget} /></div>
+          <div className="stamp-sheet-visual"><StampSlots count={stamps} target={summitStampTarget} /></div>
           <div className="reward-copy">
             <h3>{mountains[sheet.mountain].name} is ready</h3>
             <p>{mountains[sheet.mountain + 1]
@@ -441,7 +518,7 @@ export default function Page() {
         </Dialog>
       )}
 
-      {(showSummitReveal || bonusVisible) && (
+      {(showSummitReveal || (bonusVisible && !burstField)) && (
         <Dialog key={showSummitReveal ? "summit" : "bonus"} title={showSummitReveal ? "Summit reached!" : "Perfect week!"} onClose={showSummitReveal ? () => finishSummit(current) : close} variant="reward">
           <div className="achievement-reveal">
             <div className="reward-rays" aria-hidden="true">{Array.from({ length: 10 }, (_, index) => <i key={index} style={{ "--spark-angle": `${index * 36}deg`, "--spark-delay": `${(index % 3) * 75}ms` } as CSSProperties} />)}</div>

@@ -17,6 +17,7 @@ export type Expedition = {
   summitsReached: number;
   climbStartWeek: string;
   points: number;
+  demoReferralsUnlocked?: true;
   referralPointsAwarded?: true;
   passes: number;
   vouchers: number;
@@ -134,8 +135,12 @@ export function getSnapshot() {
   }
 }
 
+export function referralsUnlocked(state: Expedition) {
+  return state.demoReferralsUnlocked === true || state.summitsReached >= rules.referrals.unlockAt;
+}
+
 function creditDemoReferrals(state: Expedition): Expedition {
-  if (state.referralPointsAwarded || state.summitsReached < rules.referrals.unlockAt) return state;
+  if (state.referralPointsAwarded || !referralsUnlocked(state)) return state;
   return { ...state, points: state.points + demoReferralPoints, referralPointsAwarded: true };
 }
 
@@ -190,17 +195,21 @@ export function saveCheckIn(day: string, patch: DayLog) {
   return result;
 }
 
+function startClimb(state: Expedition, summitsReached: number): Expedition {
+  const monday = mondayOf(state.today);
+  return {
+    ...state,
+    summitsReached,
+    climbStartWeek: weekClosed(state, monday) ? addDays(monday, 7) : monday,
+  };
+}
+
 export function claimSummit(expectedLevel: number) {
   let earned: number | null = null;
   update((state) => {
     if (state.summitsReached !== expectedLevel || summitStamps(state) < rules.summitStampTarget) return state;
-    const monday = mondayOf(state.today);
     earned = expectedLevel;
-    return {
-      ...state,
-      summitsReached: expectedLevel + 1,
-      climbStartWeek: weekClosed(state, monday) ? addDays(monday, 7) : monday,
-    };
+    return startClimb(state, expectedLevel + 1);
   });
   return earned;
 }
@@ -242,23 +251,12 @@ export function nextDemoDay() {
   update((state) => creditWeeklyBonus({ ...state, today: addDays(state.today, 1) }, mondayOf(state.today)));
 }
 
-export function previewFinalStampWeek() {
+export function unlockDemoReferrals() {
   update((state) => {
-    if (state.summitsReached >= rules.mountains.length || summitStamps(state) >= rules.summitStampTarget) return state;
-    const thisWeek = mondayOf(state.today);
-    const next = creditWeeklyBonus({ ...state, today: addDays(thisWeek, 7) }, thisWeek);
-    const stamps = summitStamps(next);
-    if (stamps >= rules.summitStampTarget) return next;
-
-    const weeksToFill = rules.summitStampTarget - 1 - stamps;
-    const logs = { ...next.logs };
-    for (let week = 0; week <= weeksToFill; week += 1) {
-      const monday = addDays(next.today, week * 7);
-      const days = week === weeksToFill ? rules.weeklyTarget - 1 : rules.weeklyTarget;
-      for (const day of weekDays(monday).slice(0, days)) logs[day] ??= exampleLog();
-    }
-    const saturday = addDays(next.today, weeksToFill * 7 + 5);
-    return { ...next, today: saturday, logs };
+    if (referralsUnlocked(state)) return state;
+    const denaliIndex = rules.referrals.unlockAt - 1;
+    const next = state.summitsReached < denaliIndex ? startClimb(state, denaliIndex) : state;
+    return { ...next, demoReferralsUnlocked: true };
   });
 }
 

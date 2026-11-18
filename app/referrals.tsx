@@ -36,11 +36,14 @@ function ReferralCode() {
   );
 }
 
-function DenaliProgress({ level, onSummit }: { level: number; onSummit: () => void }) {
+function DenaliProgress({ level, onSummit, onUnlock }: { level: number; onSummit: () => void; onUnlock: () => void }) {
   return (
     <section className="panel referral-panel" aria-labelledby="referral-path-title">
       <div className="panel-heading">
         <div><h2 id="referral-path-title">Your path to {summit.name}</h2><p>{level} of {unlockAt} summits reached</p></div>
+        <button className="demo-nudge referral-demo-unlock" type="button" onClick={onUnlock}>
+          <Icon name="unlock" size={15} /> Unlock referrals (demo)
+        </button>
       </div>
       <ol className="referral-milestones">
         {mountains.slice(0, unlockAt).map((mountain, index) => (
@@ -82,9 +85,9 @@ function ReferralList() {
   );
 }
 
-export function Referrals({ level, onSummit }: { level: number; onSummit: () => void }) {
-  const unlocked = level >= unlockAt;
-
+export function Referrals({ level, unlocked, onSummit, onUnlock }: {
+  level: number; unlocked: boolean; onSummit: () => void; onUnlock: () => void;
+}) {
   return (
     <>
       <header className="page-heading">
@@ -105,7 +108,7 @@ export function Referrals({ level, onSummit }: { level: number; onSummit: () => 
           {unlocked && <ReferralCode />}
           <p className="referral-perk"><Icon name="coin" size={18} /><span><b>+{pointsPerReferral} pts</b> per friend who joins</span></p>
         </section>
-        {unlocked ? <ReferralList /> : <DenaliProgress level={level} onSummit={onSummit} />}
+        {unlocked ? <ReferralList /> : <DenaliProgress level={level} onSummit={onSummit} onUnlock={onUnlock} />}
       </div>
     </>
   );

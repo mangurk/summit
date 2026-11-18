@@ -19,6 +19,7 @@ const paths = {
   check: <path d="m5 12 4.5 4.5L19 7" />,
   copy: <><rect x="8" y="8" width="12" height="12" rx="2.5" /><path d="M16 5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16" /></>,
   lock: <><rect x="6" y="10" width="12" height="10" rx="2" /><path d="M8.5 10V7.5a3.5 3.5 0 1 1 7 0V10m-3.5 4v2" /></>,
+  unlock: <><rect x="6" y="10" width="12" height="10" rx="2" /><path d="M8.5 10V7.5a3.5 3.5 0 0 1 6.8-1.2M12 14v2" /></>,
   coin: <path d="M12 2.7 21.3 12 12 21.3 2.7 12 12 2.7Zm0 5L16.3 12 12 16.3 7.7 12 12 7.7Z" />,
   ticket: <path d="M3 6h18v4a2 2 0 0 0 0 4v4H3v-4a2 2 0 0 0 0-4V6Zm9 2v2m0 4v2" />,
   shield: <path d="M12 3 5 6v5c0 5 3.2 8.3 7 10 3.8-1.7 7-5 7-10V6l-7-3Zm-3 9 2 2 4-4" />,
@@ -42,18 +43,21 @@ export function Icon({ name, size = 20 }: { name: Glyph; size?: number }) {
   );
 }
 
-export function StampSlots({ count, target }: { count: number; target: number }) {
+export function StampSlots({ count, target, onExplain }: { count: number; target: number; onExplain?: () => void }) {
+  const Container = onExplain ? "button" : "div";
   return (
-    <div className="summit-stamps" data-ready={count === target}>
-      <div className="stamp-row" aria-hidden="true">
+    <Container className="summit-stamps" data-ready={count === target} type={onExplain ? "button" : undefined}
+      onClick={onExplain} aria-haspopup={onExplain ? "dialog" : undefined}
+      aria-label={onExplain ? `How summit stamps work, ${count} of ${target} earned` : undefined}>
+      <span className="stamp-row" aria-hidden="true">
         {Array.from({ length: target }, (_, index) => (
           <span className="stamp-slot" data-earned={index < count} key={index}>
             <span className="brand-mark" />
           </span>
         ))}
-      </div>
-      <span><b>{count}/{target}</b> summit stamps</span>
-    </div>
+      </span>
+      <span className="stamp-caption"><b>{count}/{target}</b> summit stamps{onExplain && <Icon name="info" size={12} />}</span>
+    </Container>
   );
 }
 

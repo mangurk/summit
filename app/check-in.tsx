@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { DayLog, GoalLog, MedicationLog } from "@/lib/progress";
 import { Icon, type Glyph } from "./summit-ui";
 
@@ -10,6 +10,21 @@ export const objectives = [
 
 export type Objective = (typeof objectives)[number]["id"];
 const medicationLabels = { taken: "Taken", missed: "Missed", none: "Not scheduled" };
+
+export function ObjectiveBadge({ filled, celebrate }: { filled: boolean; celebrate: boolean }) {
+  return (
+    <span className="objective-badge" data-filled={filled} data-celebrate={celebrate} aria-hidden="true">
+      <span className="objective-badge-fill" />
+      {celebrate && (
+        <span className="objective-sparks">
+          {Array.from({ length: 8 }, (_, index) => (
+            <i key={index} style={{ "--spark-angle": `${index * 45 + 12}deg` } as CSSProperties} />
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
 
 export function objectiveSummary(field: Objective, log: DayLog) {
   switch (field) {

@@ -4,14 +4,37 @@ import {
   addDays, dateFrom, isComplete, logCount, mondayOf, monthOf, monthWeekStarts, weekClosed, weekCount, weekDays, weekDayState,
   type Expedition,
 } from "@/lib/progress";
-import { DayEntries, objectives } from "./check-in";
-import { Icon } from "./summit-ui";
+import { DayEntries, Dialog, objectives } from "./check-in";
+import { Icon, StampSlots } from "./summit-ui";
 
-const { weeklyTarget, weeklyPoints, weeklyBonusTarget } = getExpedition();
+const { weeklyTarget, weeklyPoints, weeklyBonusTarget, summitStampTarget } = getExpedition();
 const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const shortDate = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
 const longDate = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric" });
 const monthTitle = new Intl.DateTimeFormat("en-US", { month: "long" });
+
+export function StampGuide({ count, onClose }: { count: number; onClose: () => void }) {
+  return (
+    <Dialog title="How summit stamps work" onClose={onClose} variant="reward">
+      <div className="stamp-sheet-visual"><StampSlots count={count} target={summitStampTarget} /></div>
+      <ul className="stamp-rules">
+        <li>
+          <span className="stamp-rule-icon"><Icon name="flag" size={17} /></span>
+          <div><b>Earn a weekly stamp</b><p>Complete at least {weeklyTarget} of {weeklyBonusTarget} daily check-ins. You can miss up to {weeklyBonusTarget - weeklyTarget} days and still earn a stamp when the week closes.</p></div>
+        </li>
+        <li>
+          <span className="stamp-rule-icon"><Icon name="coin" size={17} /></span>
+          <div><b>Go for the weekly bonus</b><p>{weeklyBonusTarget} qualifying days earn {weeklyPoints} points. A Rest Day Pass can cover one missed check-in and help keep your weekly bonus within reach.</p></div>
+        </li>
+        <li>
+          <span className="stamp-rule-icon" aria-hidden="true"><span className="brand-mark" /></span>
+          <div><b>Reach your next summit</b><p>Collect {summitStampTarget} stamps to claim a crest and open the next climb. Your stamps carry over after a missed week.</p></div>
+        </li>
+      </ul>
+      <button className="button button-primary" type="button" onClick={onClose}>Got it <Icon name="check" size={17} /></button>
+    </Dialog>
+  );
+}
 
 function weekRange(monday: string) {
   const sunday = addDays(monday, 6);
@@ -48,10 +71,10 @@ function WeekBody({ state, monday, onDay }: { state: Expedition; monday: string;
       </div>
       <div className="week-summary">
         <span className="week-qualifying" data-earned={qualified}>
-          <Icon name={qualified ? "check" : "flag"} size={14} /> <b>{Math.min(count, weeklyTarget)}/{weeklyTarget}</b> qualifying days
+          <Icon name={qualified ? "check" : "flag"} size={14} /> {`${Math.min(count, weeklyTarget)}/${weeklyTarget} qualifying days`}
         </span>
         <span className={earned ? "week-reward is-earned" : "week-reward"}>
-          <Icon name={earned ? "check" : "coin"} size={15} /> {earned ? `${weeklyPoints} pts earned` : `+${weeklyPoints} pts at ${weeklyBonusTarget} days`}
+          <Icon name={earned ? "check" : "coin"} size={14} /> {earned ? `${weeklyPoints} pts earned` : `+${weeklyPoints} pts at ${weeklyBonusTarget} days`}
         </span>
       </div>
     </>
