@@ -842,6 +842,18 @@ body:has(.sheet[open]) { overflow: hidden; }
   .objective { min-height: 52px; }
 }
 
+@media (max-width: 699px) and (display-mode: browser) {
+  @supports (height: 100svh) {
+    /* Keep the nav above the expanded toolbar even while Safari animates it. */
+    .app-nav {
+      inset: 100svh 0 auto; margin-inline: auto;
+      transform: translateY(calc(-100% - 10px));
+    }
+    .toast { top: 100svh; bottom: auto; translate: 0 calc(-100% - 81px); }
+    .shell { padding-bottom: max(calc(95px + env(safe-area-inset-bottom)), calc(95px + 100lvh - 100svh)); }
+  }
+}
+
 @media (min-width: 700px) {
   .app-bar, .shell { width: min(calc(100% - 60px),1100px); }
   .app-bar { height: 72px; }
