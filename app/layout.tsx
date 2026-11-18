@@ -1,35 +1,31 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Manrope, Outfit } from "next/font/google";
 import "./globals.css";
 
-// Geist is just a neutral default. Swap the fonts if your design calls for it.
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"] });
+const display = Outfit({ variable: "--font-outfit", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Daily Moment take-home",
-  description: "Build the main daily moment of an app that helps someone stick with one daily goal.",
+  title: "Summit — The Nine Summits",
+  description: "Turn daily check-ins into an expedition, one summit at a time.",
+  appleWebApp: { capable: true, title: "Summit", statusBarStyle: "default" },
+  icons: {
+    icon: { url: "/icon.png?v=summit-gradient", type: "image/png", sizes: "128x128" },
+    apple: { url: "/summit/summit-mark-192.png", type: "image/png", sizes: "192x192" },
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#f5f3f8",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full">{children}</body>
+    <html lang="en" className={`${manrope.variable} ${display.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }

@@ -1,18 +1,41 @@
 {
-  "_comment": "This is placeholder data so the scaffold has something to render. Replace all of it to fit the daily goal you choose. Keep it a local file in this repo. Do not add a backend or a database.",
-  "goalTitle": "Sample daily goal",
-  "goalSubtitle": "Swap this content for whatever your daily moment needs",
-  "streakDays": 4,
-  "history": [
-    { "date": "2026-11-13", "done": true },
-    { "date": "2026-11-14", "done": true },
-    { "date": "2026-11-15", "done": false },
-    { "date": "2026-11-16", "done": true },
-    { "date": "2026-11-17", "done": false }
+  "previewDate": "2026-11-21",
+  "initialPoints": 180,
+  "weeklyTarget": 5,
+  "weeklyBonusTarget": 7,
+  "summitStampTarget": 4,
+  "weeklyPoints": 100,
+  "previewWeeks": [
+    { "monday": "2026-10-19", "loggedDays": [0, 1, 2, 3, 4] },
+    { "monday": "2026-10-26", "loggedDays": [1, 3, 6] },
+    { "monday": "2026-11-02", "loggedDays": [0, 1, 2, 3, 4, 5, 6] },
+    { "monday": "2026-11-09", "loggedDays": [0, 1, 3, 4, 6] },
+    { "monday": "2026-11-16", "loggedDays": [0, 1, 2, 3] }
   ],
-  "items": [
-    { "id": "a", "label": "First sample item", "detail": "e.g. a word to learn, an amount to save, a wind-down step" },
-    { "id": "b", "label": "Second sample item", "detail": "Shape this list around your goal" },
-    { "id": "c", "label": "Third sample item", "detail": "The scaffold just proves the data loads; the design is yours" }
-  ]
+  "discountTenths": 12,
+  "referrals": {
+    "unlockAt": 3,
+    "code": "SUMMIT-D3",
+    "pointsPerReferral": 200,
+    "members": [
+      { "name": "Maya R.", "initials": "MR", "summits": 2 },
+      { "name": "Jordan L.", "initials": "JL", "summits": 1 },
+      { "name": "Sam T.", "initials": "ST", "summits": 0 }
+    ]
+  },
+  "mountains": [
+    { "name": "Kilimanjaro", "region": "Tanzania", "badge": "Trailhead Scout", "crestShadow": "#00546563", "x": 15, "y": 86 },
+    { "name": "Aconcagua", "region": "Argentina", "badge": "Andean Pathfinder", "crestShadow": "#04727f63", "x": 44, "y": 75 },
+    { "name": "Denali", "region": "Alaska", "badge": "Northern Ascent", "crestShadow": "#06469963", "x": 77, "y": 86 },
+    { "name": "Elbrus", "region": "Caucasus", "badge": "Cloudline Voyager", "crestShadow": "#4933ac63", "x": 83, "y": 57 },
+    { "name": "Mount Logan", "region": "Yukon", "badge": "Glacier Warden", "crestShadow": "#6b0bc463", "x": 57, "y": 49 },
+    { "name": "Puncak Jaya", "region": "New Guinea", "badge": "Equatorial Edge", "crestShadow": "#9913b963", "x": 24, "y": 60 },
+    { "name": "Vinson", "region": "Antarctica", "badge": "Polar Vanguard", "crestShadow": "#99234863", "x": 17, "y": 31 },
+    { "name": "Mont Blanc", "region": "Alps", "badge": "Alpine Laureate", "crestShadow": "#d3780563", "x": 48, "y": 24 },
+    { "name": "Everest", "region": "Himalayas", "badge": "Above the Clouds", "crestShadow": "#dd870263", "x": 79, "y": 18 }
+  ],
+  "items": {
+    "pass": { "name": "Rest Day Pass", "price": 120 },
+    "voucher": { "name": "20% month perk", "price": 400 }
+  }
 }
