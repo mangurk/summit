@@ -843,15 +843,16 @@ body:has(.sheet[open]) { overflow: hidden; }
 }
 
 @media (max-width: 699px) and (display-mode: browser) {
-  @supports (height: 100svh) {
-    /* Keep the nav above the expanded toolbar even while Safari animates it. */
-    .app-nav {
-      inset: 100svh 0 auto; margin-inline: auto;
-      transform: translateY(calc(-100% - 10px));
-    }
-    .toast { top: 100svh; bottom: auto; translate: 0 calc(-100% - 81px); }
-    .shell { padding-bottom: max(calc(95px + env(safe-area-inset-bottom)), calc(95px + 100lvh - 100svh)); }
+  /* Scroll the content independently so gestures don't resize the browser's viewport. */
+  html, body { overflow: hidden; overscroll-behavior: none; }
+  body { position: relative; height: 100dvh; }
+  .app-scroll {
+    height: 100%; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
   }
+  .app-scroll::-webkit-scrollbar { display: none; }
+  body:has(.sheet[open]) .app-scroll { overflow-y: hidden; }
+  .app-header { position: static; }
+  .app-nav { position: absolute; inset-inline: 0; margin-inline: auto; transform: none; }
 }
 
 @media (min-width: 700px) {

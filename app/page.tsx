@@ -329,6 +329,7 @@ export default function Page() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [monthOpen, setMonthOpen] = useState(false);
   const [reportWeek, setReportWeek] = useState<string | null>(null);
+  const appScroll = useRef<HTMLDivElement>(null);
   const reportOrigin = useRef<{ monday: string; scroll: number } | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [badgeBurst, setBadgeBurst] = useState<{ day: string; field: Objective } | null>(null);
@@ -355,12 +356,17 @@ export default function Page() {
     return () => window.clearTimeout(timeout);
   }, [badgeBurst]);
 
+  function scrollContainer() {
+    const container = appScroll.current;
+    return container && getComputedStyle(container).overflowY !== "visible" ? container : document.scrollingElement;
+  }
+
   function navigate(next: Tab) {
     setTab(next);
     setReportWeek(null);
     setToast(null);
     setBadgeBurst(null);
-    window.scrollTo({ top: 0, behavior: "instant" });
+    scrollContainer()?.scrollTo({ top: 0, behavior: "instant" });
   }
 
   function previewNextDay() {
@@ -370,9 +376,10 @@ export default function Page() {
   }
 
   function showWeek(monday: string) {
-    reportOrigin.current = { monday, scroll: window.scrollY };
+    const container = scrollContainer();
+    reportOrigin.current = { monday, scroll: container?.scrollTop ?? 0 };
     setReportWeek(monday);
-    window.scrollTo({ top: 0, behavior: "instant" });
+    container?.scrollTo({ top: 0, behavior: "instant" });
   }
 
   function returnToMonth() {
@@ -381,7 +388,7 @@ export default function Page() {
     if (!origin) return;
     window.requestAnimationFrame(() => {
       document.getElementById(`month-week-${origin.monday}`)?.focus({ preventScroll: true });
-      window.scrollTo({ top: origin.scroll, behavior: "instant" });
+      scrollContainer()?.scrollTo({ top: origin.scroll, behavior: "instant" });
     });
   }
 
@@ -450,26 +457,28 @@ export default function Page() {
 
   return (
     <>
-      <header className="app-header">
-        <div className="app-bar">
-          <button className="brand" type="button" onClick={() => navigate("today")} aria-label="Summit home"><span className="brand-tile" aria-hidden="true"><span className="brand-mark" /></span>SUMMIT</button>
-          <NavButtons active={tab} onChange={navigate} />
-          <div className="header-actions">
-            <button className="points-pill" type="button" onClick={() => navigate("rewards")} aria-label={`Rewards, ${state.points} points`}><Icon name="coin" size={17} /> <b>{state.points}</b><span>pts</span></button>
-            <button className="crest-button" type="button" style={{ "--crest-shadow": mountains[level - 1].crestShadow } as CSSProperties} onClick={() => navigate("profile")} aria-label={`Profile, level ${level}`}><Badge level={level} size={42} shine /></button>
+      <div className="app-scroll" ref={appScroll}>
+        <header className="app-header">
+          <div className="app-bar">
+            <button className="brand" type="button" onClick={() => navigate("today")} aria-label="Summit home"><span className="brand-tile" aria-hidden="true"><span className="brand-mark" /></span>SUMMIT</button>
+            <NavButtons active={tab} onChange={navigate} />
+            <div className="header-actions">
+              <button className="points-pill" type="button" onClick={() => navigate("rewards")} aria-label={`Rewards, ${state.points} points`}><Icon name="coin" size={17} /> <b>{state.points}</b><span>pts</span></button>
+              <button className="crest-button" type="button" style={{ "--crest-shadow": mountains[level - 1].crestShadow } as CSSProperties} onClick={() => navigate("profile")} aria-label={`Profile, level ${level}`}><Badge level={level} size={42} shine /></button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="shell" id="main">
-        {tab === "today" && (reportWeek
-          ? <WeekBreakdown key={reportWeek} state={state} monday={reportWeek} onBack={returnToMonth} />
-          : <Today state={state} stamps={stamps} burstField={burstField} monthOpen={monthOpen} weekOffset={weekOffset} onToggleMonth={() => setMonthOpen((open) => !open)} onOffset={setWeekOffset} onMap={() => map()} onNextDay={previewNextDay} onExplainStamps={() => setSheet({ type: "stamp-guide" })} onLog={(field) => setSheet({ type: "log", field })} onDay={(date) => setSheet({ type: "day", date })} onWeek={showWeek} />)}
-        {tab === "map" && <ExpeditionMap state={state} stamps={stamps} selected={selection ?? current} from={travelFrom} onSelect={setSelection} onArrive={finishTravel} />}
-        {tab === "rewards" && <RewardsStore state={state} onRedeem={buy} onPass={() => setSheet({ type: "pass" })} />}
-        {tab === "referrals" && <Referrals level={level} unlocked={referralsUnlocked(state)} onSummit={() => map(rules.referrals.unlockAt - 1)} onUnlock={demoUnlockReferrals} />}
-        {tab === "profile" && <Profile state={state} onMascot={chooseMascot} onSummit={map} onDay={previewNextDay} onReset={() => setSheet({ type: "reset" })} onInstall={() => setSheet({ type: "install" })} />}
-      </main>
+        <main className="shell" id="main">
+          {tab === "today" && (reportWeek
+            ? <WeekBreakdown key={reportWeek} state={state} monday={reportWeek} onBack={returnToMonth} />
+            : <Today state={state} stamps={stamps} burstField={burstField} monthOpen={monthOpen} weekOffset={weekOffset} onToggleMonth={() => setMonthOpen((open) => !open)} onOffset={setWeekOffset} onMap={() => map()} onNextDay={previewNextDay} onExplainStamps={() => setSheet({ type: "stamp-guide" })} onLog={(field) => setSheet({ type: "log", field })} onDay={(date) => setSheet({ type: "day", date })} onWeek={showWeek} />)}
+          {tab === "map" && <ExpeditionMap state={state} stamps={stamps} selected={selection ?? current} from={travelFrom} onSelect={setSelection} onArrive={finishTravel} />}
+          {tab === "rewards" && <RewardsStore state={state} onRedeem={buy} onPass={() => setSheet({ type: "pass" })} />}
+          {tab === "referrals" && <Referrals level={level} unlocked={referralsUnlocked(state)} onSummit={() => map(rules.referrals.unlockAt - 1)} onUnlock={demoUnlockReferrals} />}
+          {tab === "profile" && <Profile state={state} onMascot={chooseMascot} onSummit={map} onDay={previewNextDay} onReset={() => setSheet({ type: "reset" })} onInstall={() => setSheet({ type: "install" })} />}
+        </main>
+      </div>
 
       {toast && !showSummitReveal && !burstField && (
         <div className={`toast${toast.title ? " daily-toast" : ""}`} role="status">
