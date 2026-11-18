@@ -34,8 +34,10 @@ If you want to mess around a bit longer, you can unlock referrals directly from 
 With Node 22, run this from the project folder.
 
 ```sh
-npm install && npm run dev
+npm run demo
 ```
+
+This installs dependencies with regular progress messages, then starts Summit. The standard `npm install && npm run dev` command also works.
 
 Open `http://localhost:3000` on the computer. On an iPhone connected to the same Wi-Fi, open the **Network** URL printed in the terminal.
 
