@@ -150,8 +150,6 @@ a { color: inherit; }
   font-size: 11px; font-weight: 800; transition: background .16s ease;
 }
 .hero-link:hover { background: #fff0d7; }
-.expedition-hero[data-ready="true"] { border-color: #c79b71; }
-.expedition-hero[data-ready="true"] .hero-link { box-shadow: inset 0 -2px 0 #ae775e59, 0 3px 0 #a970595e; }
 .hero-sprite { position: absolute; right: 17px; bottom: 10px; display: grid; justify-items: center; pointer-events: none; }
 .hero-sprite i { width: 30px; height: 6px; border-radius: 50%; background: #150b248f; margin-top: -2px; }
 .hero-mascot, .map-mascot, .companion-preview { display: block; object-fit: contain; }
@@ -210,9 +208,6 @@ a { color: inherit; }
 .week-reward.is-earned { color: #2b5e47; background: #e5f5e8; }
 
 .today-expedition, .today-check-ins { display: grid; min-width: 0; gap: inherit; }
-.today-grid[data-advance-ready="true"] :is(.week-panel,.check-in-panel,.monthly-panel) {
-  background: #f9f7fa; box-shadow: none; filter: saturate(.46);
-}
 .panel.monthly-panel { padding: 0; }
 .monthly-trigger {
   width: 100%; min-height: 56px; display: grid; grid-template-columns: minmax(0,1fr) auto auto;
@@ -349,19 +344,17 @@ a { color: inherit; }
 .objective[data-logged="true"] .objective-icon { animation: log-pop .35s ease backwards; }
 @keyframes log-pop { 45% { transform: scale(1.1) rotate(-5deg); } }
 .check-in-foot {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 5px 8px;
   margin-top: 11px; color: var(--quiet); font-size: 10px;
 }
 .check-in-status { display: inline-flex; align-items: center; gap: 5px; }
 .check-in-foot svg { color: #764fc8; flex: none; }
 .check-in-foot.success { color: #4f3473; font-weight: 800; }
 .check-in-next {
-  display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 4px 7px;
+  display: inline-flex; align-items: center; justify-content: center; min-height: 25px; padding: 3px 8px;
   border: 1px solid #e5d7f1; border-radius: 8px; background: #f6effa; color: #593286;
 }
 .check-in-next:hover { border-color: #c4a5e1; background: #eee2f7; }
 .check-in-actions { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 5px; flex: none; }
-.check-in-actions .check-in-next { justify-content: center; min-height: 25px; padding: 3px 8px; }
 
 .map-board {
   position: relative; isolation: isolate; overflow: hidden; height: clamp(390px,115vw,530px);
@@ -458,7 +451,6 @@ a { color: inherit; }
 .summit-detail > p { color: var(--quiet); font-size: 12px; }
 .summit-reward { display: grid; gap: 3px; width: 100%; margin-top: 6px; border-radius: 11px; padding: 9px; color: #4f3675; background: #f6efff; font-size: 12px; }
 .summit-reward span { font-size: 11px; }
-.summit-detail .button { margin-top: 5px; }
 .map-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; color: var(--quiet); font-size: 11px; }
 .map-legend span { display: flex; align-items: center; gap: 5px; }
 .map-legend i { width: 8px; height: 8px; border-radius: 3px; background: #ae8df0; }
@@ -708,8 +700,8 @@ body:has(.sheet[open]) { overflow: hidden; }
 .pass-calendar-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 3px; margin-top: 6px; color: #644c77; font-size: 10px; }
 .reward-sheet { border-color: #6a4a91; color: #fff7fc; background: radial-gradient(circle at 50% 46%, #674697,#362551 52%,#1c102b 89%); }
 .reward-sheet .icon-button { color: #f8e3fd; border-color: #d9b3f55c; background: #492d6c; }
-.advance-stamps { display: grid; justify-items: center; margin: 7px 0; }
-.advance-stamps .summit-stamps { --stamp-size: 35px; }
+.redeem-stamps { display: grid; justify-items: center; margin: 7px 0; }
+.redeem-stamps .summit-stamps { --stamp-size: 35px; }
 .achievement-reveal { position: relative; isolation: isolate; display: grid; min-height: 163px; place-items: center; margin: 0 auto; }
 .achievement-reveal .badge-art, .coin-reveal { animation: badge-reveal .76s cubic-bezier(.23,.8,.25,1.15) both; filter: drop-shadow(0 7px 10px #1007219c); }
 @keyframes badge-reveal { from { transform: scale(.4) rotate(-16deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }

@@ -15,7 +15,6 @@ export type Expedition = {
   protectedDays: string[];
   rewardedWeeks: string[];
   summitsReached: number;
-  seenSummitReveal?: number;
   climbStartWeek: string;
   points: number;
   referralPointsAwarded?: true;
@@ -204,13 +203,6 @@ export function claimSummit(expectedLevel: number) {
     };
   });
   return earned;
-}
-
-export function acknowledgeSummitReveal(expectedLevel: number) {
-  update((state) => {
-    if (state.summitsReached !== expectedLevel || summitStamps(state) !== rules.summitStampTarget) return state;
-    return { ...state, seenSummitReveal: expectedLevel };
-  });
 }
 
 export function redeem(item: keyof typeof rules.items) {

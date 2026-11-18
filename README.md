@@ -14,12 +14,12 @@ Open http://localhost:3000. Node 22 is recommended.
 
 1. Start Saturday with **3 of 4 Aconcagua stamps** and Friday missed. Log all three items to reach the week’s fifth qualifying day. The personal goal note is optional.
 2. Select the **next-day arrow** beside **3/3** in Daily check-in and finish Sunday’s check-in. The week awards one stamp for **5 qualifying days** and **100 bonus points** for **7 qualifying days**.
-3. Select **See your new route** on the **Summit reached!** reveal, then **Redeem 4 stamps** on the map. Claim the **Andean Pathfinder** crest and watch your companion move to Denali. **Advance!** on Today reopens redemption if you close either dialog.
+3. Select **See your new route** on the **Summit reached!** reveal, then **Redeem 4 stamps** on the map. Closing either dialog also claims the **Andean Pathfinder** crest and opens the trail to Denali.
 4. Open **Monthly breakdown** below Daily check-in to review weekly progress and daily log charts.
 5. The shop offers a **Rest Day Pass** for 120 points and a **20% one-month demo coupon** for 400 points. A pass covers a missed day in the current or previous week for stamp and bonus eligibility. It preserves the original log history.
 6. **Profile → Demo controls → Preview final stamp week** jumps ahead in the simulated calendar to try another ascent. Choose a pika, mountain goat, or raven in **Profile → Trail companion**.
 
-Four qualifying weeks earn the stamps for each peak. Stamps carry across missed weeks and stay ready to redeem until the member advances. Each summit adds 1.2 percentage points to the simulated recurring discount. Nine summits total **10.8%**. A rainforest season would follow in a future version.
+Four qualifying weeks earn the stamps for each peak. Stamps carry across missed weeks. Each summit adds 1.2 percentage points to the simulated recurring discount. Nine summits total **10.8%**. A rainforest season would follow in a future version.
 
 Logs, points, achievements, and companion selection live in the browser. The dose field records what the user enters. There is no dose recommendation, billing integration, or real coupon. The browser manifest and touch-safe navigation support the app shell.
 

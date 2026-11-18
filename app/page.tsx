@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import type { CSSProperties } from "react";
 import { defaultMascot, getExpedition, mascots, type MascotId } from "@/lib/data";
 import {
-  acknowledgeSummitReveal, canPlacePass, chooseMascot, claimSummit, dateFrom, discountFor, getInitialSnapshot, getSnapshot,
+  canPlacePass, chooseMascot, claimSummit, dateFrom, discountFor, getInitialSnapshot, getSnapshot,
   isComplete, logCount, mondayOf, nextDemoDay, placePass, previewFinalStampWeek,
   readExpedition, redeem, resetDemo, saveCheckIn, subscribe, summitStamps, weekClosed, weekCount,
   type DayLog, type Expedition,
@@ -27,7 +27,7 @@ type Sheet =
   | { type: "log"; field: Objective }
   | { type: "day"; date: string }
   | { type: "bonus" }
-  | { type: "advance"; mountain: number }
+  | { type: "stamps"; mountain: number }
   | { type: "pass" }
   | { type: "install" }
   | { type: "reset" };
@@ -48,10 +48,10 @@ function NavButtons({ active, onChange }: { active: Tab; onChange: (tab: Tab) =>
 }
 
 function Today({
-  state, stamps, monthOpen, weekOffset, onToggleMonth, onOffset, onMap, onAdvance, onNextDay, onLog, onDay, onWeek,
+  state, stamps, monthOpen, weekOffset, onToggleMonth, onOffset, onMap, onNextDay, onLog, onDay, onWeek,
 }: {
   state: Expedition; stamps: number; monthOpen: boolean; weekOffset: number; onToggleMonth: () => void;
-  onOffset: (offset: number) => void; onMap: () => void; onAdvance: () => void; onNextDay: () => void;
+  onOffset: (offset: number) => void; onMap: () => void; onNextDay: () => void;
   onLog: (field: Objective) => void; onDay: (day: string) => void; onWeek: (monday: string) => void;
 }) {
   const level = state.summitsReached;
@@ -77,9 +77,9 @@ function Today({
         <div><p className="page-date"><Icon name="calendar" size={15} /> {fullDate.format(dateFrom(state.today))}</p><h1>Today</h1></div>
         <span className="page-heading-chip"><Icon name="flag" size={15} /> The Nine Summits</span>
       </header>
-      <div className="today-grid" data-advance-ready={ready}>
+      <div className="today-grid">
         <div className="today-expedition">
-          <section className="expedition-hero" data-ready={ready} aria-labelledby="hero-title">
+          <section className="expedition-hero" aria-labelledby="hero-title">
             <div className="hero-content">
               <div className="hero-top">
                 <span className="hero-kicker"><span className="brand-mark" aria-hidden="true" /> {seasonComplete ? "SEASON COMPLETE" : `SUMMIT ${String(mountIndex + 1).padStart(2, "0")} / 09`}</span>
@@ -87,7 +87,7 @@ function Today({
               </div>
               <h2 id="hero-title">{current.name}</h2>
               <p>{ready ? "Your summit is ready" : seasonComplete ? "All nine summits reached" : "One stamp per qualifying week"}</p>
-              <button className="hero-link" type="button" onClick={ready ? onAdvance : onMap}><Icon name={ready ? "flag" : "map"} size={16} /> {ready ? "Advance!" : "View route"}</button>
+              <button className="hero-link" type="button" onClick={onMap}><Icon name="map" size={16} /> View route</button>
             </div>
             <div className="hero-sprite" aria-hidden="true"><Mascot id={state.mascot ?? defaultMascot} className="hero-mascot" /><i /></div>
           </section>
@@ -100,7 +100,7 @@ function Today({
             <div className="panel-heading">
               <div><h2 id="check-in-title">Daily check-in</h2><p>{complete ? "Today’s check-in is complete" : "Log all three to earn a day on the trail."}</p></div>
               <div className="check-in-actions">
-                {complete && !ready && (
+                {complete && (
                   <button className="check-in-next" type="button" onClick={onNextDay}
                     aria-label="Proceed to next day (demo)" title="Proceed to next day (demo)">
                     <Icon name="east" size={16} />
@@ -129,9 +129,6 @@ function Today({
               <span className="check-in-status" role="status">
                 <Icon name={complete ? "spark" : "shield"} size={17} /> {complete ? checkInMessage : "Any honest entry counts."}
               </span>
-              {complete && ready && (
-                <button className="check-in-next" type="button" onClick={onAdvance}>Advance! <Icon name="east" size={16} /></button>
-              )}
             </div>
           </section>
           <MonthlyBreakdown state={state} open={monthOpen} onToggle={onToggleMonth} onWeek={onWeek} />
@@ -141,15 +138,14 @@ function Today({
   );
 }
 
-function ExpeditionMap({ state, stamps, selected, from, onSelect, onArrive, onAdvance }: {
+function ExpeditionMap({ state, stamps, selected, from, onSelect, onArrive }: {
   state: Expedition; stamps: number; selected: number; from: number | null;
-  onSelect: (index: number) => void; onArrive: () => void; onAdvance: () => void;
+  onSelect: (index: number) => void; onArrive: () => void;
 }) {
   const level = state.summitsReached;
   const mountain = mountains[selected];
   const reached = selected < level;
   const current = selected === level;
-  const ready = current && stamps === summitStampTarget;
   const finished = level === mountains.length;
 
   return (
@@ -159,11 +155,10 @@ function ExpeditionMap({ state, stamps, selected, from, onSelect, onArrive, onAd
         <MapBoard completed={level} selected={selected} from={from} mascot={state.mascot ?? defaultMascot} onSelect={onSelect} onArrive={onArrive} />
         <div className="map-details">
           <section className="panel summit-detail" data-state={reached ? "earned" : current ? "current" : "locked"} aria-label="Selected summit">
-            <span className="summit-tag" data-open={reached || current}><Icon name={reached ? "check" : current ? "flag" : "lock"} size={14} /> {reached ? "Summit reached" : ready ? "Ready to redeem" : current ? "Next summit" : "Locked"}</span>
+            <span className="summit-tag" data-open={reached || current}><Icon name={reached ? "check" : current ? "flag" : "lock"} size={14} /> {reached ? "Summit reached" : current ? "Next summit" : "Locked"}</span>
             <PeakIcon index={selected} className="summit-preview-peak" />
             <h2>{mountain.name}</h2><p>{mountain.region}</p>
             <div className="summit-reward"><b>{mountain.badge}</b><span>+{discountFor(1)}% recurring demo discount</span></div>
-            {ready && <button className="button button-primary" type="button" onClick={onAdvance}><Icon name="flag" size={17} /> Redeem stamps</button>}
           </section>
           <div className="map-legend" aria-label="Map legend"><span><i /> Reached</span><span><i /> Next</span><span><i /> Locked</span></div>
           <section className="panel season-note">
@@ -290,10 +285,9 @@ export default function Page() {
   const level = state.summitsReached;
   const current = Math.min(level, mountains.length - 1);
   const stamps = summitStamps(state);
-  const advanceReady = stamps === summitStampTarget;
+  const summitReady = stamps === summitStampTarget;
   const bonusVisible = sheet?.type === "bonus";
-  const showSummitReveal = tab === "today" && !reportWeek && (!sheet || bonusVisible)
-    && advanceReady && state.seenSummitReveal !== current;
+  const showSummitReveal = tab === "today" && !reportWeek && (!sheet || bonusVisible) && summitReady;
 
   useEffect(() => {
     if (!toast?.title) return;
@@ -335,30 +329,20 @@ export default function Page() {
     navigate("map");
   }
 
-  function beginAdvance() {
-    if (!advanceReady) return;
-    if (state.seenSummitReveal !== current) acknowledgeSummitReveal(current);
+  function showNewRoute() {
+    if (!summitReady) return;
     map();
-    setSheet({ type: "advance", mountain: current });
+    setSheet({ type: "stamps", mountain: current });
   }
 
-  function dismissSummitReveal() {
-    acknowledgeSummitReveal(current);
-    setToast(null);
-    close();
-  }
-
-  function advance(mountain: number) {
+  function finishSummit(mountain: number) {
     const earned = claimSummit(mountain);
-    if (earned === null) {
-      close();
-      return;
-    }
+    close();
+    if (earned === null) return;
     const next = mountains[earned + 1];
     setSelection(next ? earned + 1 : earned);
     if (next && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) setTravelFrom(earned);
     setToast({ message: next ? `${mountains[earned].name} claimed. ${next.name} is open.` : "Mountain season complete." });
-    close();
   }
 
   function announceBonus(bonus: boolean) {
@@ -378,7 +362,7 @@ export default function Page() {
   function applyPass(day: string) {
     const reward = placePass(day);
     if (!reward.applied) return;
-    if (!advanceReady && summitStamps(readExpedition(getSnapshot())) === summitStampTarget) navigate("today");
+    if (!summitReady && summitStamps(readExpedition(getSnapshot())) === summitStampTarget) navigate("today");
     announceBonus(reward.bonus);
     if (!reward.bonus) setToast({ message: `Rest Day Pass applied to ${shortDate.format(dateFrom(day))}.` });
   }
@@ -405,11 +389,11 @@ export default function Page() {
       <main className="shell" id="main">
         {tab === "today" && (reportWeek
           ? <WeekBreakdown key={reportWeek} state={state} monday={reportWeek} onBack={returnToMonth} />
-          : <Today state={state} stamps={stamps} monthOpen={monthOpen} weekOffset={weekOffset} onToggleMonth={() => setMonthOpen((open) => !open)} onOffset={setWeekOffset} onMap={() => map()} onAdvance={beginAdvance} onNextDay={previewNextDay} onLog={(field) => setSheet({ type: "log", field })} onDay={(date) => setSheet({ type: "day", date })} onWeek={showWeek} />)}
-        {tab === "map" && <ExpeditionMap state={state} stamps={stamps} selected={selection ?? current} from={travelFrom} onSelect={setSelection} onArrive={finishTravel} onAdvance={beginAdvance} />}
+          : <Today state={state} stamps={stamps} monthOpen={monthOpen} weekOffset={weekOffset} onToggleMonth={() => setMonthOpen((open) => !open)} onOffset={setWeekOffset} onMap={() => map()} onNextDay={previewNextDay} onLog={(field) => setSheet({ type: "log", field })} onDay={(date) => setSheet({ type: "day", date })} onWeek={showWeek} />)}
+        {tab === "map" && <ExpeditionMap state={state} stamps={stamps} selected={selection ?? current} from={travelFrom} onSelect={setSelection} onArrive={finishTravel} />}
         {tab === "rewards" && <RewardsStore state={state} onRedeem={buy} onPass={() => setSheet({ type: "pass" })} />}
         {tab === "referrals" && <Referrals level={level} onSummit={() => map(rules.referrals.unlockAt - 1)} />}
-        {tab === "profile" && <Profile state={state} onMascot={chooseMascot} onSummit={map} onDay={previewNextDay} onPreview={advanceReady || level === mountains.length ? undefined : () => { previewFinalStampWeek(); setWeekOffset(0); navigate("today"); }} onReset={() => setSheet({ type: "reset" })} onInstall={() => setSheet({ type: "install" })} />}
+        {tab === "profile" && <Profile state={state} onMascot={chooseMascot} onSummit={map} onDay={previewNextDay} onPreview={level === mountains.length ? undefined : () => { previewFinalStampWeek(); setWeekOffset(0); navigate("today"); }} onReset={() => setSheet({ type: "reset" })} onInstall={() => setSheet({ type: "install" })} />}
       </main>
 
       {toast && !showSummitReveal && (
@@ -442,23 +426,23 @@ export default function Page() {
         </Dialog>
       )}
 
-      {sheet?.type === "advance" && (
-        <Dialog title="Redeem summit stamps?" onClose={close} variant="reward">
-          <div className="advance-stamps"><StampSlots count={stamps} target={summitStampTarget} /></div>
+      {sheet?.type === "stamps" && (
+        <Dialog title="Summit stamps earned" onClose={() => finishSummit(sheet.mountain)} variant="reward">
+          <div className="redeem-stamps"><StampSlots count={stamps} target={summitStampTarget} /></div>
           <div className="reward-copy">
             <h3>{mountains[sheet.mountain].name} is ready</h3>
             <p>{mountains[sheet.mountain + 1]
               ? `Claim your crest and open the trail to ${mountains[sheet.mountain + 1].name}.`
               : "Claim your final crest and complete the mountain season."}</p>
           </div>
-          <button className="button button-primary" type="button" disabled={!advanceReady || sheet.mountain !== level} onClick={() => advance(sheet.mountain)}>
+          <button className="button button-primary" type="button" disabled={!summitReady || sheet.mountain !== level} onClick={() => finishSummit(sheet.mountain)}>
             Redeem {summitStampTarget} stamps <Icon name="east" size={18} />
           </button>
         </Dialog>
       )}
 
       {(showSummitReveal || bonusVisible) && (
-        <Dialog key={showSummitReveal ? "summit" : "bonus"} title={showSummitReveal ? "Summit reached!" : "Perfect week!"} onClose={showSummitReveal ? dismissSummitReveal : close} variant="reward">
+        <Dialog key={showSummitReveal ? "summit" : "bonus"} title={showSummitReveal ? "Summit reached!" : "Perfect week!"} onClose={showSummitReveal ? () => finishSummit(current) : close} variant="reward">
           <div className="achievement-reveal">
             <div className="reward-rays" aria-hidden="true">{Array.from({ length: 10 }, (_, index) => <i key={index} style={{ "--spark-angle": `${index * 36}deg`, "--spark-delay": `${(index % 3) * 75}ms` } as CSSProperties} />)}</div>
             {showSummitReveal ? <Badge level={current + 1} size={158} shine /> : <div className="coin-reveal"><Icon name="coin" size={74} /></div>}
@@ -475,12 +459,12 @@ export default function Page() {
             )}
           </div>
           <button className="button button-primary" type="button" onClick={() => {
-            if (showSummitReveal) beginAdvance();
+            if (showSummitReveal) showNewRoute();
             else {
               close();
-              if (!advanceReady) navigate("rewards");
+              navigate("rewards");
             }
-          }}>{showSummitReveal ? "See your new route" : advanceReady ? "Continue" : "View rewards"} <Icon name="east" size={18} /></button>
+          }}>{showSummitReveal ? "See your new route" : "View rewards"} <Icon name="east" size={18} /></button>
         </Dialog>
       )}
 
