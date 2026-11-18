@@ -72,6 +72,60 @@ function NavButtons({ active, referralUnread, onChange }: { active: Tab; referra
     return () => observer.disconnect();
   }, [active]);
 
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const mobile = window.matchMedia("(max-width: 699px)");
+    const root = document.documentElement;
+    const threshold = 16;
+    let previousY = window.scrollY;
+    let travel = 0;
+
+    function onScroll() {
+      if (!mobile.matches) return;
+      const viewportHeight = root.clientHeight;
+      const limit = Math.max(0, root.scrollHeight - viewportHeight);
+      const y = Math.max(0, Math.min(window.scrollY, limit));
+      const delta = y - previousY;
+      // Keep the nav hidden in the last fifth of a screen. Short pages still leave room above it.
+      const nearBottom = limit - y <= Math.min(viewportHeight / 5, limit / 2);
+      previousY = y;
+
+      if (y < threshold) {
+        nav?.removeAttribute("data-scroll-hidden");
+        travel = 0;
+      } else if (nearBottom) {
+        nav?.setAttribute("data-scroll-hidden", "");
+        travel = 0;
+      } else if (delta !== 0) {
+        travel = Math.sign(travel) === Math.sign(delta) ? travel + delta : delta;
+        if (Math.abs(travel) >= threshold) {
+          nav?.toggleAttribute("data-scroll-hidden", travel > 0);
+          travel = 0;
+        }
+      }
+    }
+
+    function resetScrollDirection() {
+      previousY = window.scrollY;
+      travel = 0;
+      nav?.removeAttribute("data-scroll-hidden");
+      onScroll();
+    }
+
+    resetScrollDirection();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    mobile.addEventListener("change", resetScrollDirection);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      mobile.removeEventListener("change", resetScrollDirection);
+      nav.removeAttribute("data-scroll-hidden");
+    };
+  }, [active, referralUnread]);
+
   function showHover(button: HTMLButtonElement) {
     const hover = hoverRef.current;
     if (!hover) return;
@@ -485,7 +539,7 @@ export default function Page() {
       )}
 
       {sheet?.type === "log" && (
-        <Dialog key={sheet.field} title={`Log ${objectives.find((objective) => objective.id === sheet.field)?.title.toLowerCase()}`} onClose={close}>
+        <Dialog key={sheet.field} title={`Log ${objectives.find((objective) => objective.id === sheet.field)?.title.toLowerCase()}`} onClose={close} variant="centered">
           <LogForm field={sheet.field} log={state.logs[state.today] ?? {}} onSave={(patch) => saveLog(state.today, sheet.field, patch)} />
         </Dialog>
       )}
@@ -552,9 +606,13 @@ export default function Page() {
         </Dialog>
       )}
 
-      {sheet?.type === "install" && <Dialog title="Add to Home Screen" onClose={close}><p className="sheet-note">Open your browser’s share menu or app menu and choose Add to Home Screen or Install, if offered.</p></Dialog>}
+      {sheet?.type === "install" && (
+        <Dialog title="Add to Home Screen" onClose={close} variant="centered">
+          <p className="sheet-note">Open your browser’s share menu or app menu and choose Add to Home Screen or Install, if offered.</p>
+        </Dialog>
+      )}
       {sheet?.type === "reset" && (
-        <Dialog title="Reset demo progress?" onClose={close}>
+        <Dialog title="Reset demo progress?" onClose={close} variant="centered">
           <p className="sheet-note">This clears your local logs, points, and rewards and restores the example expedition.</p>
           <button className="button button-primary" type="button" onClick={() => { resetDemo(); close(); setSelection(null); setTravelFrom(null); setWeekOffset(0); navigate("today"); }}>Reset to example</button>
         </Dialog>

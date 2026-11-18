@@ -32,9 +32,10 @@ html { -webkit-tap-highlight-color: transparent; }
   html::-webkit-scrollbar, .sheet::-webkit-scrollbar { display: none; }
 }
 body {
+  --page-wash: radial-gradient(ellipse at 52% -15%, #efe6fe, transparent 480px);
   min-height: 100dvh;
   margin: 0;
-  background: radial-gradient(ellipse at 52% -15%, #efe6fe, transparent 480px), var(--paper);
+  background: var(--page-wash), var(--paper);
   color: var(--ink);
   font: 600 14px/1.45 var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -178,7 +179,7 @@ button.summit-stamps:hover { border-color: #e9bc91; background: #35234c; }
 .meter > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#fc9d7c,#ffe09e); transition: width .5s ease; }
 .hero-link {
   display: inline-flex; min-height: 36px; align-items: center; gap: 6px; margin-top: 12px; padding: 4px 10px;
-  border: 1px solid #ffe7ca; border-radius: 8px; background: #ffdbad; color: #3f2751;
+  border-radius: 8px; background: #ffdbad; color: #3f2751;
   font-size: 11px; font-weight: 800; transition: background .16s ease;
 }
 .hero-link:hover { background: #fff0d7; }
@@ -828,13 +829,32 @@ body:has(.sheet[open]) { overflow: hidden; }
 .reward-sheet .button-primary:hover { background: #ffe1b9; }
 
 @media (max-width: 699px) {
-  .app-nav { bottom: calc(10px + env(safe-area-inset-bottom)); }
+  .app-nav {
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    /* Fade in place so the nav stays clear of Safari's toolbar sampling edge. */
+    transition: opacity .18s ease-out;
+  }
+  .app-nav[data-scroll-hidden]:not(:has(:focus-visible)) {
+    opacity: 0; pointer-events: none;
+  }
+  body:has(.app-nav[data-scroll-hidden]):not(:has(.app-nav :focus-visible)) .toast {
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  html:has(.sheet[open]) { overflow: hidden; overscroll-behavior-y: none; }
+  /* Safari samples the body color outside the backdrop. Keep the page paint on its own layer. */
+  body:has(.sheet[open]) {
+    background-color: color-mix(in srgb, #2e164e 67%, var(--paper));
+    background-image: var(--page-wash), linear-gradient(var(--paper), var(--paper));
+  }
+  .sheet::backdrop { background-color: #2e164eab; }
   /* Leave a backdrop gutter so Safari samples it instead of the sheet's buttons. */
   .sheet {
     bottom: calc(12px + env(safe-area-inset-bottom)); width: min(calc(100% - 24px), 460px);
     max-height: min(calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px), 780px);
-    border-radius: 22px;
+    border-radius: 22px; overscroll-behavior-y: none;
   }
+  /* Keep these dialogs clear of Safari’s bottom toolbar. */
+  .centered-sheet { inset: 0; margin: auto; }
   .sheet-inner { padding-bottom: 18px; }
   .app-bar { height: 58px; }
   .shell { padding-top: 15px; }
@@ -845,6 +865,12 @@ body:has(.sheet[open]) { overflow: hidden; }
   .week-panel, .check-in-panel { padding-block: 12px; }
   .day-strip { margin-top: 8px; }
   .objective { min-height: 52px; }
+}
+
+@media (max-width: 699px) and (display-mode: browser) {
+  /* Keep document height independent of Safari's collapsing toolbar. */
+  body { min-height: 100svh; }
+  .shell { padding-bottom: 95px; }
 }
 
 @media (min-width: 700px) {

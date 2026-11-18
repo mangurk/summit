@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Outfit } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"] });
@@ -25,7 +26,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${manrope.variable} ${display.variable}`}>
-      <body>{children}</body>
+      <body>
+        <Script id="mobile-scroll-restoration" strategy="beforeInteractive">
+          {`if (window.matchMedia("(max-width: 699px)").matches) history.scrollRestoration = "manual";`}
+        </Script>
+        {children}
+      </body>
     </html>
   );
 }

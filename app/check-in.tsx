@@ -57,7 +57,7 @@ export function Dialog({
   title: string;
   onClose: () => void;
   children: ReactNode;
-  variant?: "reward";
+  variant?: "reward" | "centered";
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -71,7 +71,7 @@ export function Dialog({
   return (
     <dialog
       ref={dialogRef}
-      className={`sheet${variant === "reward" ? " reward-sheet" : ""}`}
+      className={`sheet${variant ? ` ${variant}-sheet` : ""}`}
       aria-labelledby="sheet-title"
       onCancel={(event) => { event.preventDefault(); onClose(); }}
       onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
