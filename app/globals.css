@@ -842,19 +842,6 @@ body:has(.sheet[open]) { overflow: hidden; }
   .objective { min-height: 52px; }
 }
 
-@media (max-width: 699px) and (display-mode: browser) {
-  /* Scroll the content independently so gestures don't resize the browser's viewport. */
-  html, body { overflow: hidden; overscroll-behavior: none; }
-  body { position: relative; height: 100dvh; }
-  .app-scroll {
-    height: 100%; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
-  }
-  .app-scroll::-webkit-scrollbar { display: none; }
-  body:has(.sheet[open]) .app-scroll { overflow-y: hidden; }
-  .app-header { position: static; }
-  .app-nav { position: absolute; inset-inline: 0; margin-inline: auto; transform: none; }
-}
-
 @media (min-width: 700px) {
   .app-bar, .shell { width: min(calc(100% - 60px),1100px); }
   .app-bar { height: 72px; }
